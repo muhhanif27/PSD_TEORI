@@ -20,37 +20,35 @@ class GoFood:
         self.env = env
         self.drivers = simpy.Resource(env, jumlah_driver)
         self.waktu_antar = waktu_antar
-        self.antrian = []  # Antrian pesanan jika semua driver sibuk
+        self.antrian = simpy.Store(env)  # Simpan pesanan dalam antrean
 
     def antar_pesanan(self, pesanan, driver_id, waktu_masuk):
         """Simulasi proses pengantaran makanan oleh driver tertentu."""
         waktu_pengantaran = random.expovariate(1 / self.waktu_antar)
         yield self.env.timeout(waktu_pengantaran)
 
-        total_waktu = env.now - waktu_masuk  # Total waktu dari pemesanan hingga diterima pelanggan
+        total_waktu = self.env.now - waktu_masuk  # Total waktu dari pemesanan hingga diterima pelanggan
         waktu_total.append(total_waktu)
 
+        global pesanan_terlambat
         if total_waktu > BATAS_KETERLAMBATAN:
-            global pesanan_terlambat
             pesanan_terlambat += 1
 
-        print(f"Driver {driver_id} mengantar {pesanan} dalam {waktu_pengantaran:.2f} menit. (Total: {total_waktu:.2f} menit)")
+        print(f"[{self.env.now:.2f}] Driver {driver_id} mengantar {pesanan} dalam {waktu_pengantaran:.2f} menit. (Total: {total_waktu:.2f} menit)")
 
 def pelanggan(env, nama_pesanan, gofood):
     """Proses pelanggan melakukan pemesanan."""
     waktu_masuk = env.now
-    print(f"{nama_pesanan} masuk pada {waktu_masuk:.2f} menit.")
+    print(f"[{waktu_masuk:.2f}] {nama_pesanan} masuk.")
 
     with gofood.drivers.request() as request:
         yield request  # Menunggu driver tersedia
         
-        # Jika driver sedang sibuk, pesanan harus menunggu
         waktu_tunggu_pesanan = env.now - waktu_masuk
         waktu_tunggu.append(waktu_tunggu_pesanan)
 
-        # Identifikasi driver yang mengambil pesanan
-        driver_id = len(gofood.drivers.users)
-        print(f"{nama_pesanan} diambil oleh Driver {driver_id} setelah menunggu {waktu_tunggu_pesanan:.2f} menit.")
+        driver_id = gofood.drivers.count  # ID driver yang sedang digunakan
+        print(f"[{env.now:.2f}] {nama_pesanan} diambil oleh Driver {driver_id} setelah menunggu {waktu_tunggu_pesanan:.2f} menit.")
 
         yield env.process(gofood.antar_pesanan(nama_pesanan, driver_id, waktu_masuk))
 
