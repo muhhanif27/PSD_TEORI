@@ -60,7 +60,7 @@ def generator_pesanan(env, gofood, kecepatan_pesanan):
         env.process(pelanggan(env, f"Pesanan {id_pesanan}", gofood))
         id_pesanan += 1
 
-# Jalankan simulasi
+# simulasi
 random.seed(RANDOM_SEED)
 env = simpy.Environment()
 gofood = GoFood(env, JUMLAH_DRIVER, WAKTU_ANTAR)
