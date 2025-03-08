@@ -1,3 +1,7 @@
+# Muhammad Hanif
+# 202210370311265
+# Pemodelan dan Simulasi Data B
+
 import simpy
 import random
 import numpy as np
